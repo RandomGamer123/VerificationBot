@@ -138,8 +138,11 @@ async def on_message(message):
             await message.channel.send("User with user id `{0}` not found.".format(tomessageid))
             return
         embed = discord.Embed(title=remindmsg[0], description=remindmsg[1], timestamp=datetime.datetime.utcnow(), color=int(remindmsg[2],16))
-        await userobj.send(embed=embed)
-        await message.channel.send("User successfully reminded.")
+        try:
+            await userobj.send(embed=embed)
+            await message.channel.send("User successfully reminded.")
+        except discord.Forbidden:
+            await message.channel.send("DM failed to send, likely due to the user having DMs disabled or having blocked the bot.")
     if (command == "verify" and perms >=0):
         if len(args) == 0:
             await message.channel.send("Verification instructions: Visit <{0}> to get a verification code valid for 5 minutes. Then input your code and Roblox username in Discord using the command `{1}verify <code> <username>`. Do not include the brackets.".format(config["verification_link"], prefix))
