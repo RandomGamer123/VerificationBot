@@ -1,4 +1,4 @@
-import discord, json, os, time
+import discord, json, os, time, re, datetime
 from apiclient import discovery
 from google.oauth2 import service_account
 
@@ -21,12 +21,30 @@ prefix = config["prefix"]
 
 verifylogid = tokens["verifylogid"]
 
+remindmsg = config["verifyremindmsg"]
+
 startactivity = discord.Game(name="Type {}help to get started!".format(prefix))
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
 secret_file = "Config/client_secret.json"
 credentials = service_account.Credentials.from_service_account_file(secret_file, scopes=scopes)
 service = discovery.build('sheets','v4',credentials=credentials)
+
+def extract_id(possibleidstr): # works for user ids, and mentions
+    try:
+        return(int(possibleidstr))
+    except ValueError:
+        if(re.match("<@!?[0-9]*?>", possibleidstr)):
+            if(possibleidstr[2] == "!"):
+                possibleid = possibleidstr[3:-1]
+            else:
+                possibleid = possibleidstr[2:-1]
+            try:
+                return(int(possibleid))
+            except ValueError:
+                return -1
+        else:
+            return -1
 
 @client.event
 async def on_ready():
@@ -39,6 +57,7 @@ async def on_message(message):
     global helpdata
     global verifylogid
     global config
+    global remindmsg
     if message.author == client.user:
         return
     if not (message.content.startswith(prefix)):
@@ -106,6 +125,21 @@ async def on_message(message):
     if (command == "getsource" and perms >= 0):
         await message.channel.send("This bot is open source, the source code is at: <https://github.com/RandomGamer123/VerificationBot>.")
         return
+    if (command == "remind" and perms >= 40):
+        if len(args) == 0:
+            await message.channel.send("You need at least 1 argument for this command. Command format: {0}remind <user>".format(prefix))
+            return
+        tomessageid = extract_id(args[0])
+        if(tomessageid == -1):
+            await message.channel.send("No valid user ID detected in `{0}`. User ID argument must be a mention or their user id directly.".format(args[0]))
+            return
+        userobj = await client.fetch_user(tomessageid)
+        if not userobj:
+            await message.channel.send("User with user id `{0}` not found.".format(tomessageid))
+            return
+        embed = discord.Embed(title=remindmsg[0], description=remindmsg[1], timestamp=datetime.datetime.utcnow(), color=int(remindmsg[2],16))
+        await userobj.send(embed=embed)
+        await message.channel.send("User successfully reminded.")
     if (command == "verify" and perms >=0):
         if len(args) == 0:
             await message.channel.send("Verification instructions: Visit <{0}> to get a verification code valid for 5 minutes. Then input your code and Roblox username in Discord using the command `{1}verify <code> <username>`. Do not include the brackets.".format(config["verification_link"], prefix))
