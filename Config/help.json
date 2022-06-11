@@ -14,6 +14,11 @@
 		"usage":"<user> (<user> must be user id or mention)",
 		"perms":40
 	},
+	"manualverify":{
+		"description":"Manually verifies a user and gives them the verified role and also renames them if a nickname is provided.",
+		"usage":"<user> (user id or mention) [nickname])",
+		"perms":40
+	},
 	"verify":{
 		"description":"Verifies that you are in the group, and gives certain relevant roles based on your rank and ownership of premium classes.",
 		"usage":"<code> <username> (For verification instructions type `!verify`)",

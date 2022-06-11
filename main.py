@@ -234,6 +234,32 @@ async def on_message(message):
             await message.channel.send("Verification complete.")
         clearcommand = (service.spreadsheets().values().clear(spreadsheetId = verifylogid, range = "RobloxCodePairs!A2:F")).execute()
         response = (service.spreadsheets().values().update(spreadsheetId = verifylogid, range = "RobloxCodePairs!A2:F", valueInputOption="RAW", body = {"range":"RobloxCodePairs!A2:F","majorDimension":"ROWS","values":newcodelist})).execute()
+    if (command == "manualverify" and perms >= 40):
+        if(len(args) < 1):
+            await message.channel.send("Invalid arguments. Command format: {0}manualverify <user> [nickname]".format(prefix))
+            return
+        targetid = extract_id(args[0])
+        if(targetid == -1):
+            await message.channel.send("No valid user ID detected in `{0}`. User ID argument must be a mention or their user id directly.".format(args[0]))
+            return
+        if isinstance(message.channel, discord.abc.GuildChannel):
+            roleguild = message.guild
+        else:
+            roleguild = client.get_guild(config["main_guild"])
+        userobj = await roleguild.fetch_member(targetid)
+        if not userobj:
+            await message.channel.send("User with user id `{0}` not found.".format(targetid))
+            return
+        verifiedrole = discord.utils.get(roleguild.roles, name="Verified")
+        passengersrole = discord.utils.get(roleguild.roles, name="Passengers")
+        notingrouprole = discord.utils.get(roleguild.roles, name="NOT IN GROUP")
+        await userobj.add_roles(verifiedrole, passengersrole, reason="Manual verification")
+        await userobj.remove_roles(notingrouprole, reason="Manual verification")
+        args.pop(0)
+        if(len(args) > 0):
+            renameto = " ".join(args)
+            await userobj.edit(nick=renameto)
+        await message.channel.send("Manually verified user <@"+str(targetid)+">")
 
 if os.getenv("BOTTOKEN"):
     bottoken = os.getenv("BOTTOKEN")
