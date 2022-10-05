@@ -70,7 +70,7 @@ async def on_message(message):
     if len(args) == 0:
         return
     command = args.pop(0)
-    #perms means the permission the user has: developer -> 50, admin -> 40, verified members -> 20, message sent in DM -> 10, all users -> 0
+    #perms means the permission the user has: developer -> 50, admin -> 40, HRs -> 30, verified members -> 20, message sent in DM -> 10, all users -> 0
     perms = 0
     isDM = False
     if message.author.id in [156390113654341632,676596209627955231]: 
@@ -80,6 +80,8 @@ async def on_message(message):
             perms = 40
         else:
             for role in message.author.roles:
+                if role.id == 923519711445151796 and perms < 30:
+                    perms = 30
                 if role.id == 923519711386419230 and perms < 20:
                     perms = 20
     else:
@@ -234,7 +236,7 @@ async def on_message(message):
             await message.channel.send("Verification complete.")
         clearcommand = (service.spreadsheets().values().clear(spreadsheetId = verifylogid, range = "RobloxCodePairs!A2:F")).execute()
         response = (service.spreadsheets().values().update(spreadsheetId = verifylogid, range = "RobloxCodePairs!A2:F", valueInputOption="RAW", body = {"range":"RobloxCodePairs!A2:F","majorDimension":"ROWS","values":newcodelist})).execute()
-    if (command == "manualverify" and perms >= 40):
+    if (command == "manualverify" and perms >= 30):
         if(len(args) < 1):
             await message.channel.send("Invalid arguments. Command format: {0}manualverify <user> [nickname]".format(prefix))
             return
